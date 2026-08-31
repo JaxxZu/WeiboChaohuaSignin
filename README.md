@@ -6,7 +6,7 @@
 
 1. 浏览器打开https://m.weibo.cn/p/tabbar?containerid=100803_-_recentvisit  
 2. 按F12打开开发者工具，登录-点击network-找到 **tabbar?containerid=100803_-_recentvisit** 查看请求的cookie  
-5. 将 `SUB` `SUBP` `_T_WM`值，复制到脚本91~93行  
+3. 将 `SUB` `SUBP` `_T_WM`值，复制到脚本91~93行  
 
 <img width="1854" height="957" alt="image" src="https://github.com/user-attachments/assets/a37972a3-e1f7-46c4-bad6-63df07d7920c" />
 
@@ -14,12 +14,12 @@
 
 
 ### 步骤 2：部署到vps上  
-1.上传weibo.js脚本到vps  
-2.安装nodejs、curl  
+1. 上传weibo.js脚本到vps  
+2. 安装nodejs、curl  
 ```
 sudo apt install nodejs curl -y
 ```
-3.运行脚本 
+3. 运行脚本 
 ```
 node /path-to/weibo.js
 ```
