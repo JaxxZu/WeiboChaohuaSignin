@@ -3,11 +3,94 @@
 // 浏览器打开https://m.weibo.cn/p/tabbar?containerid=100803_-_recentvisit
 // 按F12打开开发者工具，登录-点击network-找到tabbar?containerid=100803_-_recentvisit 查看里面的cookie
 
+
+
+
+
+const { execFileSync } = require('child_process')
+
+const HTTP = {
+  request(method, url, body = null, options = {}) {
+    const args = [
+      '-sS',
+      '-L'
+    ]
+
+    // 原脚本 timeout 单位为毫秒，curl --max-time 单位为秒
+    const timeout = options.timeout || 10000
+    args.push('--max-time', String(Math.max(1, Math.ceil(timeout / 1000))))
+
+    // 请求头
+    const headers = options.headers || {}
+    for (const [key, value] of Object.entries(headers)) {
+      args.push('-H', `${key}: ${value}`)
+    }
+
+    // POST 请求体
+    if (method === 'POST') {
+      args.push('-X', 'POST')
+
+      if (body !== null && body !== undefined) {
+        const payload = typeof body === 'string' ? body : JSON.stringify(body)
+        args.push('--data-binary', payload)
+      }
+    }
+
+    // 在响应内容最后附加 HTTP 状态码，方便兼容原来的 resp.status
+    const statusMarker = '__HTTP_STATUS__:'
+    args.push('-w', `\\n${statusMarker}%{http_code}`)
+    args.push(url)
+
+    let output
+
+    try {
+      output = execFileSync('curl', args, {
+        encoding: 'utf8',
+        maxBuffer: 10 * 1024 * 1024
+      })
+    } catch (error) {
+      const stderr = error.stderr ? error.stderr.toString().trim() : ''
+      throw new Error(stderr || error.message || `HTTP ${method} 请求失败`)
+    }
+
+    const marker = `\n${statusMarker}`
+    const markerIndex = output.lastIndexOf(marker)
+
+    if (markerIndex === -1) {
+      throw new Error('无法读取 HTTP 状态码')
+    }
+
+    const responseBody = output.slice(0, markerIndex)
+    const statusText = output.slice(markerIndex + marker.length).trim()
+    const status = Number.parseInt(statusText, 10)
+
+    if (Number.isNaN(status)) {
+      throw new Error(`无效的 HTTP 状态码: ${statusText}`)
+    }
+
+    return {
+      status: status,
+      text: responseBody,
+      json() {
+        return JSON.parse(responseBody)
+      }
+    }
+  },
+
+  get(url, options = {}) {
+    return HTTP.request('GET', url, null, options)
+  },
+
+  post(url, body, options = {}) {
+    return HTTP.request('POST', url, body, options)
+  }
+}
+
 const CONFIG = {
   
-    SUB: "你的SUB_cookie值",
-    SUBP: "你的SUBP值",
-    _T_WM: "你的_T_WM值",
+    SUB: "此处填写",
+    SUBP: "此处填写",
+    _T_WM: "此处填写",
     
     // 签到延迟设置（毫秒），避免请求过快
     CHECKIN_DELAY: 1000,
@@ -578,5 +661,3 @@ const CONFIG = {
   
   // 仅分析模式（不执行签到）
   // analyzeOnly()
-  
-  
